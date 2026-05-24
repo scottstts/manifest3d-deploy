@@ -4072,7 +4072,7 @@ bool bvhIntersectFogVolumeHit(
 					rayDirection.x *= flipEnvMap;
 					gl_FragColor = textureCube( envMap, rayDirection );
 
-				}`}),this.depthWrite=!1,this.depthTest=!1}},io=class{constructor(e){this._renderer=e,this._quad=new wr(new ro)}generate(e,t=null,i=null){if(!e.isCubeTexture)throw Error(`CubeToEquirectMaterial: Source can only be cube textures.`);let a=e.images[0],o=this._renderer,s=this._quad;t===null&&(t=4*a.height),i===null&&(i=2*a.height);let c=new A(t,i,{type:E,colorSpace:a.colorSpace}),l=a.height,u=Math.log2(l)-2,d=1/l,f=1/(3*Math.max(2**u,112));s.material.defines.CUBEUV_MAX_MIP=`${u}.0`,s.material.defines.CUBEUV_TEXEL_WIDTH=f,s.material.defines.CUBEUV_TEXEL_HEIGHT=d,s.material.uniforms.envMap.value=e,s.material.uniforms.flipEnvMap.value=e.isRenderTargetTexture?1:-1,s.material.needsUpdate=!0;let p=o.getRenderTarget(),m=o.autoClear;o.autoClear=!0,o.setRenderTarget(c),s.render(o),o.setRenderTarget(p),o.autoClear=m;let h=new Uint16Array(t*i*4),g=new Float32Array(t*i*4);o.readRenderTargetPixels(c,0,0,t,i,g),c.dispose();for(let e=0,t=g.length;e<t;e++)h[e]=y.toHalfFloat(g[e]);let _=new r(h,t,i,F,N);return _.minFilter=de,_.magFilter=M,_.wrapS=n,_.wrapT=n,_.mapping=303,_.needsUpdate=!0,_}dispose(){this._quad.dispose()}};function ao(e){return e.extensions.get(`EXT_float_blend`)}var oo=new S,so=class{get multipleImportanceSampling(){return!!this._pathTracer.material.defines.FEATURE_MIS}set multipleImportanceSampling(e){this._pathTracer.material.setDefine(`FEATURE_MIS`,+!!e)}get transmissiveBounces(){return this._pathTracer.material.transmissiveBounces}set transmissiveBounces(e){this._pathTracer.material.transmissiveBounces=e}get bounces(){return this._pathTracer.material.bounces}set bounces(e){this._pathTracer.material.bounces=e}get filterGlossyFactor(){return this._pathTracer.material.filterGlossyFactor}set filterGlossyFactor(e){this._pathTracer.material.filterGlossyFactor=e}get samples(){return this._pathTracer.samples}get target(){return this._pathTracer.target}get tiles(){return this._pathTracer.tiles}get stableNoise(){return this._pathTracer.stableNoise}set stableNoise(e){this._pathTracer.stableNoise=e}get isCompiling(){return!!this._pathTracer.isCompiling}constructor(e){this._renderer=e,this._generator=new mi,this._pathTracer=new Ja(e),this._queueReset=!1,this._clock=new ce,this._compilePromise=null,this._lowResPathTracer=new Ja(e),this._lowResPathTracer.tiles.set(1,1),this._quad=new wr(new no({map:null,transparent:!0,blending:0,premultipliedAlpha:e.getContextAttributes().premultipliedAlpha})),this._materials=null,this._previousEnvironment=null,this._previousBackground=null,this._internalBackground=null,this.renderDelay=100,this.minSamples=5,this.fadeDuration=500,this.enablePathTracing=!0,this.pausePathTracing=!1,this.dynamicLowRes=!1,this.lowResScale=.25,this.renderScale=1,this.synchronizeRenderSize=!0,this.rasterizeScene=!0,this.renderToCanvas=!0,this.textureSize=new S(1024,1024),this.rasterizeSceneCallback=(e,t)=>{this._renderer.render(e,t)},this.renderToCanvasCallback=(e,t,n)=>{let r=t.autoClear;t.autoClear=!1,n.render(t),t.autoClear=r},this.setScene(new te,new u)}setBVHWorker(e){this._generator.setBVHWorker(e)}setScene(e,t,n={}){e.updateMatrixWorld(!0),t.updateMatrixWorld();let r=this._generator;if(r.setObjects(e),this._buildAsync)return r.generateAsync(n.onProgress).then(n=>this._updateFromResults(e,t,n));{let n=r.generate();return this._updateFromResults(e,t,n)}}setSceneAsync(...e){this._buildAsync=!0;let t=this.setScene(...e);return this._buildAsync=!1,t}setCamera(e){this.camera=e,this.updateCamera()}updateCamera(){let e=this.camera;e.updateMatrixWorld(),this._pathTracer.setCamera(e),this._lowResPathTracer.setCamera(e),this.reset()}updateMaterials(){let e=this._pathTracer.material,t=this._renderer,n=this._materials,r=this.textureSize,i=Xi(n);e.textures.setTextures(t,i,r.x,r.y),e.materials.updateFrom(n,i),this.reset()}updateLights(){let e=this.scene,t=this._renderer,n=this._pathTracer.material,r=Zi(e),i=Yi(r);n.lights.updateFrom(r,i),n.iesProfiles.setTextures(t,i),this.reset()}updateEnvironment(){let e=this.scene,t=this._pathTracer.material;if(this._internalBackground&&=(this._internalBackground.dispose(),null),t.backgroundBlur=e.backgroundBlurriness,t.backgroundIntensity=e.backgroundIntensity??1,t.backgroundRotation.makeRotationFromEuler(e.backgroundRotation).invert(),e.background===null)t.backgroundMap=null,t.backgroundAlpha=0;else if(e.background.isColor){this._colorBackground=this._colorBackground||new to(16);let n=this._colorBackground;n.topColor.equals(e.background)||(n.topColor.set(e.background),n.bottomColor.set(e.background),n.update()),t.backgroundMap=n,t.backgroundAlpha=1}else if(e.background.isCubeTexture){if(e.background!==this._previousBackground){let n=new io(this._renderer).generate(e.background);this._internalBackground=n,t.backgroundMap=n,t.backgroundAlpha=1}}else t.backgroundMap=e.background,t.backgroundAlpha=1;if(t.environmentIntensity=e.environment===null?0:e.environmentIntensity??1,t.environmentRotation.makeRotationFromEuler(e.environmentRotation).invert(),this._previousEnvironment!==e.environment&&e.environment!==null)if(e.environment.isCubeTexture){let n=new io(this._renderer).generate(e.environment);t.envMapInfo.updateFrom(n)}else t.envMapInfo.updateFrom(e.environment);this._previousEnvironment=e.environment,this._previousBackground=e.background,this.reset()}_updateFromResults(e,t,n){let{materials:r,geometry:i,bvh:a,bvhChanged:o,needsMaterialIndexUpdate:s}=n;this._materials=r;let c=this._pathTracer.material;return o&&(c.bvh.updateFrom(a),c.attributesArray.updateFrom(i.attributes.normal,i.attributes.tangent,i.attributes.uv,i.attributes.color)),s&&c.materialIndexAttribute.updateFrom(i.attributes.materialIndex),this._previousScene=e,this.scene=e,this.camera=t,this.updateCamera(),this.updateMaterials(),this.updateEnvironment(),this.updateLights(),n}renderSample(){let e=this._lowResPathTracer,t=this._pathTracer,n=this._renderer,r=this._clock,i=this._quad;this._updateScale(),this._queueReset&&(t.reset(),e.reset(),this._queueReset=!1,i.material.opacity=0,r.start());let a=r.getDelta()*1e3,o=r.getElapsedTime()*1e3;if(!this.pausePathTracing&&this.enablePathTracing&&this.renderDelay<=o&&!this.isCompiling&&t.update(),t.alpha=t.material.backgroundAlpha!==1||!ao(n),e.alpha=t.alpha,this.renderToCanvas){let n=this._renderer,r=this.minSamples;if(o>=this.renderDelay&&this.samples>=this.minSamples&&(this.fadeDuration===0?i.material.opacity=1:i.material.opacity=Math.min(i.material.opacity+a/this.fadeDuration,1)),!this.enablePathTracing||this.samples<r||i.material.opacity<1){if(this.dynamicLowRes&&!this.isCompiling){e.samples<1&&(e.material=t.material,e.update());let r=i.material.opacity;i.material.opacity=1-i.material.opacity,i.material.map=e.target.texture,i.render(n),i.material.opacity=r}(!this.dynamicLowRes&&this.rasterizeScene||this.dynamicLowRes&&this.isCompiling)&&this.rasterizeSceneCallback(this.scene,this.camera)}this.enablePathTracing&&i.material.opacity>0&&(i.material.opacity<1&&(i.material.blending=this.dynamicLowRes?2:1),i.material.map=t.target.texture,this.renderToCanvasCallback(t.target,n,i),i.material.blending=0)}}reset(){this._queueReset=!0,this._pathTracer.samples=0}dispose(){this._quad.dispose(),this._quad.material.dispose(),this._pathTracer.dispose()}_updateScale(){if(this.synchronizeRenderSize){this._renderer.getDrawingBufferSize(oo);let e=Math.floor(this.renderScale*oo.x),t=Math.floor(this.renderScale*oo.y);if(this._pathTracer.getSize(oo),oo.x!==e||oo.y!==t){let n=this.lowResScale;this._pathTracer.setSize(e,t),this._lowResPathTracer.setSize(Math.floor(e*n),Math.floor(t*n))}}}};function co(){let e=new u(Ne.fov,1,Ne.near,Ne.far),t=new s(...Ne.target);return e.position.fromArray(Ne.position),e.lookAt(t),e.updateMatrixWorld(!0),Ae(e,t)}function lo({camera:e,leftPanelOcclusionWidth:t,rightPanelOcclusionWidth:n,snapshot:r,viewportSize:i}){e.fov=r.fov,e.near=r.near,e.far=r.far,e.aspect=i.width/i.height,e.position.fromArray(r.position),e.quaternion.fromArray(r.quaternion);let a=je(i.width,i.height,n,t);a?e.setViewOffset(a.fullWidth,a.fullHeight,a.offsetX,a.offsetY,a.width,a.height):e.clearViewOffset(),e.updateProjectionMatrix(),e.updateMatrixWorld(!0)}var $={bloom:{radius:.3,strength:.52,threshold:1.05},bounces:8,denoise:{albedoFloor:.04,atrousPasses:3,colorPhi:.24,depthPhi:.08,depthRelativePhi:.018,detailProtection:.82,diffuseBlend:.72,diffuseIlluminationPhi:.42,enabled:!0,fireflyClampSigma:3,fireflyMinRatio:2.4,materialPhi:.18,normalPhi:.08,residualBlend:.55,transparencyInteriorProtection:.28,transparencyProtection:.92},emissionGain:1,environmentFillIntensity:.22,filterGlossyFactor:.55,maxSamples:128,maxSampleOptions:[128,256,512],maxTextureSize:1024,minSamples:1,renderDelayMs:0,toneMappingExposure:1,tiles:[1,1]},uo={name:`LuminosityHighPassShader`,uniforms:{tDiffuse:{value:null},luminosityThreshold:{value:1},smoothWidth:{value:1},defaultColor:{value:new k(0)},defaultOpacity:{value:0}},vertexShader:`
+				}`}),this.depthWrite=!1,this.depthTest=!1}},io=class{constructor(e){this._renderer=e,this._quad=new wr(new ro)}generate(e,t=null,i=null){if(!e.isCubeTexture)throw Error(`CubeToEquirectMaterial: Source can only be cube textures.`);let a=e.images[0],o=this._renderer,s=this._quad;t===null&&(t=4*a.height),i===null&&(i=2*a.height);let c=new A(t,i,{type:E,colorSpace:a.colorSpace}),l=a.height,u=Math.log2(l)-2,d=1/l,f=1/(3*Math.max(2**u,112));s.material.defines.CUBEUV_MAX_MIP=`${u}.0`,s.material.defines.CUBEUV_TEXEL_WIDTH=f,s.material.defines.CUBEUV_TEXEL_HEIGHT=d,s.material.uniforms.envMap.value=e,s.material.uniforms.flipEnvMap.value=e.isRenderTargetTexture?1:-1,s.material.needsUpdate=!0;let p=o.getRenderTarget(),m=o.autoClear;o.autoClear=!0,o.setRenderTarget(c),s.render(o),o.setRenderTarget(p),o.autoClear=m;let h=new Uint16Array(t*i*4),g=new Float32Array(t*i*4);o.readRenderTargetPixels(c,0,0,t,i,g),c.dispose();for(let e=0,t=g.length;e<t;e++)h[e]=y.toHalfFloat(g[e]);let _=new r(h,t,i,F,N);return _.minFilter=de,_.magFilter=M,_.wrapS=n,_.wrapT=n,_.mapping=303,_.needsUpdate=!0,_}dispose(){this._quad.dispose()}};function ao(e){return e.extensions.get(`EXT_float_blend`)}var oo=new S,so=class{get multipleImportanceSampling(){return!!this._pathTracer.material.defines.FEATURE_MIS}set multipleImportanceSampling(e){this._pathTracer.material.setDefine(`FEATURE_MIS`,+!!e)}get transmissiveBounces(){return this._pathTracer.material.transmissiveBounces}set transmissiveBounces(e){this._pathTracer.material.transmissiveBounces=e}get bounces(){return this._pathTracer.material.bounces}set bounces(e){this._pathTracer.material.bounces=e}get filterGlossyFactor(){return this._pathTracer.material.filterGlossyFactor}set filterGlossyFactor(e){this._pathTracer.material.filterGlossyFactor=e}get samples(){return this._pathTracer.samples}get target(){return this._pathTracer.target}get tiles(){return this._pathTracer.tiles}get stableNoise(){return this._pathTracer.stableNoise}set stableNoise(e){this._pathTracer.stableNoise=e}get isCompiling(){return!!this._pathTracer.isCompiling}constructor(e){this._renderer=e,this._generator=new mi,this._pathTracer=new Ja(e),this._queueReset=!1,this._clock=new ce,this._compilePromise=null,this._lowResPathTracer=new Ja(e),this._lowResPathTracer.tiles.set(1,1),this._quad=new wr(new no({map:null,transparent:!0,blending:0,premultipliedAlpha:e.getContextAttributes().premultipliedAlpha})),this._materials=null,this._previousEnvironment=null,this._previousBackground=null,this._internalBackground=null,this.renderDelay=100,this.minSamples=5,this.fadeDuration=500,this.enablePathTracing=!0,this.pausePathTracing=!1,this.dynamicLowRes=!1,this.lowResScale=.25,this.renderScale=1,this.synchronizeRenderSize=!0,this.rasterizeScene=!0,this.renderToCanvas=!0,this.textureSize=new S(1024,1024),this.rasterizeSceneCallback=(e,t)=>{this._renderer.render(e,t)},this.renderToCanvasCallback=(e,t,n)=>{let r=t.autoClear;t.autoClear=!1,n.render(t),t.autoClear=r},this.setScene(new te,new u)}setBVHWorker(e){this._generator.setBVHWorker(e)}setScene(e,t,n={}){e.updateMatrixWorld(!0),t.updateMatrixWorld();let r=this._generator;if(r.setObjects(e),this._buildAsync)return r.generateAsync(n.onProgress).then(n=>this._updateFromResults(e,t,n));{let n=r.generate();return this._updateFromResults(e,t,n)}}setSceneAsync(...e){this._buildAsync=!0;let t=this.setScene(...e);return this._buildAsync=!1,t}setCamera(e){this.camera=e,this.updateCamera()}updateCamera(){let e=this.camera;e.updateMatrixWorld(),this._pathTracer.setCamera(e),this._lowResPathTracer.setCamera(e),this.reset()}updateMaterials(){let e=this._pathTracer.material,t=this._renderer,n=this._materials,r=this.textureSize,i=Xi(n);e.textures.setTextures(t,i,r.x,r.y),e.materials.updateFrom(n,i),this.reset()}updateLights(){let e=this.scene,t=this._renderer,n=this._pathTracer.material,r=Zi(e),i=Yi(r);n.lights.updateFrom(r,i),n.iesProfiles.setTextures(t,i),this.reset()}updateEnvironment(){let e=this.scene,t=this._pathTracer.material;if(this._internalBackground&&=(this._internalBackground.dispose(),null),t.backgroundBlur=e.backgroundBlurriness,t.backgroundIntensity=e.backgroundIntensity??1,t.backgroundRotation.makeRotationFromEuler(e.backgroundRotation).invert(),e.background===null)t.backgroundMap=null,t.backgroundAlpha=0;else if(e.background.isColor){this._colorBackground=this._colorBackground||new to(16);let n=this._colorBackground;n.topColor.equals(e.background)||(n.topColor.set(e.background),n.bottomColor.set(e.background),n.update()),t.backgroundMap=n,t.backgroundAlpha=1}else if(e.background.isCubeTexture){if(e.background!==this._previousBackground){let n=new io(this._renderer).generate(e.background);this._internalBackground=n,t.backgroundMap=n,t.backgroundAlpha=1}}else t.backgroundMap=e.background,t.backgroundAlpha=1;if(t.environmentIntensity=e.environment===null?0:e.environmentIntensity??1,t.environmentRotation.makeRotationFromEuler(e.environmentRotation).invert(),this._previousEnvironment!==e.environment&&e.environment!==null)if(e.environment.isCubeTexture){let n=new io(this._renderer).generate(e.environment);t.envMapInfo.updateFrom(n)}else t.envMapInfo.updateFrom(e.environment);this._previousEnvironment=e.environment,this._previousBackground=e.background,this.reset()}_updateFromResults(e,t,n){let{materials:r,geometry:i,bvh:a,bvhChanged:o,needsMaterialIndexUpdate:s}=n;this._materials=r;let c=this._pathTracer.material;return o&&(c.bvh.updateFrom(a),c.attributesArray.updateFrom(i.attributes.normal,i.attributes.tangent,i.attributes.uv,i.attributes.color)),s&&c.materialIndexAttribute.updateFrom(i.attributes.materialIndex),this._previousScene=e,this.scene=e,this.camera=t,this.updateCamera(),this.updateMaterials(),this.updateEnvironment(),this.updateLights(),n}renderSample(){let e=this._lowResPathTracer,t=this._pathTracer,n=this._renderer,r=this._clock,i=this._quad;this._updateScale(),this._queueReset&&(t.reset(),e.reset(),this._queueReset=!1,i.material.opacity=0,r.start());let a=r.getDelta()*1e3,o=r.getElapsedTime()*1e3;if(!this.pausePathTracing&&this.enablePathTracing&&this.renderDelay<=o&&!this.isCompiling&&t.update(),t.alpha=t.material.backgroundAlpha!==1||!ao(n),e.alpha=t.alpha,this.renderToCanvas){let n=this._renderer,r=this.minSamples;if(o>=this.renderDelay&&this.samples>=this.minSamples&&(this.fadeDuration===0?i.material.opacity=1:i.material.opacity=Math.min(i.material.opacity+a/this.fadeDuration,1)),!this.enablePathTracing||this.samples<r||i.material.opacity<1){if(this.dynamicLowRes&&!this.isCompiling){e.samples<1&&(e.material=t.material,e.update());let r=i.material.opacity;i.material.opacity=1-i.material.opacity,i.material.map=e.target.texture,i.render(n),i.material.opacity=r}(!this.dynamicLowRes&&this.rasterizeScene||this.dynamicLowRes&&this.isCompiling)&&this.rasterizeSceneCallback(this.scene,this.camera)}this.enablePathTracing&&i.material.opacity>0&&(i.material.opacity<1&&(i.material.blending=this.dynamicLowRes?2:1),i.material.map=t.target.texture,this.renderToCanvasCallback(t.target,n,i),i.material.blending=0)}}reset(){this._queueReset=!0,this._pathTracer.samples=0}dispose(){this._quad.dispose(),this._quad.material.dispose(),this._pathTracer.dispose()}_updateScale(){if(this.synchronizeRenderSize){this._renderer.getDrawingBufferSize(oo);let e=Math.floor(this.renderScale*oo.x),t=Math.floor(this.renderScale*oo.y);if(this._pathTracer.getSize(oo),oo.x!==e||oo.y!==t){let n=this.lowResScale;this._pathTracer.setSize(e,t),this._lowResPathTracer.setSize(Math.floor(e*n),Math.floor(t*n))}}}};function co(){let e=new u(Ne.fov,1,Ne.near,Ne.far),t=new s(...Ne.target);return e.position.fromArray(Ne.position),e.lookAt(t),e.updateMatrixWorld(!0),Ae(e,t)}function lo({camera:e,leftPanelOcclusionWidth:t,rightPanelOcclusionWidth:n,snapshot:r,viewportSize:i}){e.fov=r.fov,e.near=r.near,e.far=r.far,e.aspect=i.width/i.height,e.position.fromArray(r.position),e.quaternion.fromArray(r.quaternion);let a=je(i.width,i.height,n,t);a?e.setViewOffset(a.fullWidth,a.fullHeight,a.offsetX,a.offsetY,a.width,a.height):e.clearViewOffset(),e.updateProjectionMatrix(),e.updateMatrixWorld(!0)}var $={bloom:{radius:.2,strength:.12,threshold:1.05},bounces:8,denoise:{albedoFloor:.04,atrousPasses:3,colorPhi:.24,depthPhi:.08,depthRelativePhi:.018,detailProtection:.82,diffuseBlend:.72,diffuseIlluminationPhi:.42,enabled:!0,emissiveFireflyRecovery:{clampBlend:.9,compositeBoost:.42,darkReceiverHighLuminance:.42,darkReceiverLowLuminance:.08,diffuseBlendBoost:.34,enabled:!0,extremeEmissionLuminance:9,localDensityMin:.055,localMinLuminance:.18,localMinRatio:2.1,localSigma:2.2,neighborReject:.92,rawProtectionReduction:.58,receiverMetalnessMax:.25,receiverRoughnessMin:.5,sceneRiskThreshold:.16,smallEmitterAreaRatio:.035,strongEmissionLuminance:1.35,wideEmitterAreaRatio:.22},fireflyClampSigma:3,fireflyMinRatio:2.4,materialPhi:.18,normalPhi:.08,residualBlend:.55,transparencyInteriorProtection:.28,transparencyProtection:.92},emissionGain:1,environmentFillIntensity:.22,filterGlossyFactor:.55,maxSamples:128,maxSampleOptions:[128,256,512],maxTextureSize:1024,minSamples:1,renderDelayMs:0,toneMappingExposure:1,tiles:[1,1]},uo={name:`LuminosityHighPassShader`,uniforms:{tDiffuse:{value:null},luminosityThreshold:{value:1},smoothWidth:{value:1},defaultColor:{value:new k(0)},defaultOpacity:{value:0}},vertexShader:`
 
 		varying vec2 vUv;
 
@@ -4215,14 +4215,14 @@ bool bvhIntersectFogVolumeHit(
 
     gl_FragColor = vec4(baseColor + bloomColor, 1.0);
   }
-`;function Po(){let e=new te,t=new ee(-1,1,1,-1,0,1),n=new c(new D(2,2)),r=new a({color:`#ffffff`,side:2}),i=new O({depthTest:!1,depthWrite:!1,fragmentShader:Mo,name:`Manifest3D path tracing asset bloom color mask material`,uniforms:{tInput:{value:null},tMask:{value:null}},vertexShader:jo}),o=new O({depthTest:!1,depthWrite:!1,fragmentShader:No,name:`Manifest3D path tracing asset bloom composite material`,uniforms:{tBase:{value:null},tBloom:{value:null}},vertexShader:jo}),s=new fo(new S(1,1),$.bloom.strength,$.bloom.radius,$.bloom.threshold);e.add(n);let l=1,u=1,d=zo(l,u),f=Ro(l,u,`asset-color`),p=Ro(l,u,`combined`),m=Ro(l,u,`bloom-scratch`);function h(e,t,n){let r=Math.max(1,Math.floor(e*n)),i=Math.max(1,Math.floor(t*n));l===r&&u===i||(l=r,u=i,d.setSize(l,u),f.setSize(l,u),p.setSize(l,u),m.setSize(l,u),s.setSize(l,u))}function g(){d.dispose(),f.dispose(),p.dispose(),m.dispose(),r.dispose(),i.dispose(),o.dispose(),s.dispose(),n.geometry.dispose()}function _({camera:e,inputTexture:t,renderer:n,scene:a}){let c=n.getRenderTarget(),l=a.overrideMaterial,u=n.autoClear,h=new k,g=n.getClearAlpha();n.getClearColor(h);try{return Fo(n,a,e,d,r),i.uniforms.tInput.value=t,i.uniforms.tMask.value=d.texture,v(n,i,f),s.renderToScreen=!1,s.render(n,m,f,0,!1),o.uniforms.tBase.value=t,o.uniforms.tBloom.value=s.renderTargetsHorizontal[0].texture,v(n,o,p),p.texture}finally{a.overrideMaterial=l,n.setRenderTarget(c),n.setClearColor(h,g),n.autoClear=u}}function v(r,i,a){n.material=i,r.setRenderTarget(a),r.clear(!0,!1,!1),r.render(e,t)}return{dispose:g,render:_,setSize:h}}function Fo(e,t,n,r,i){let a=Io(t),o=t.background,s=t.overrideMaterial;t.background=null,t.overrideMaterial=i,e.autoClear=!0,e.setClearColor(0,1),e.setRenderTarget(r),e.clear(!0,!0,!0),e.render(t,n),t.background=o,t.overrideMaterial=s,Lo(a)}function Io(e){let t=[];return e.traverse(e=>{Bo(e)&&(t.push({object:e,visible:e.visible}),e.visible=e.visible&&Ao(e))}),t}function Lo(e){for(let t of e)t.object.visible=t.visible}function Ro(e,t,n){let r=new A(e,t,{depthBuffer:!1,format:F,magFilter:M,minFilter:M,stencilBuffer:!1,type:N});return r.texture.name=`Manifest3D path tracing asset bloom ${n}`,r.texture.colorSpace=``,r}function zo(e,t){let n=new A(e,t,{depthBuffer:!0,format:F,magFilter:d,minFilter:d,stencilBuffer:!1,type:ne});return n.texture.name=`Manifest3D path tracing asset bloom mask`,n.texture.colorSpace=``,n}function Bo(e){return e.isMesh===!0}var Vo=4,Ho=997,Uo=`
+`;function Po(){let e=new te,t=new ee(-1,1,1,-1,0,1),n=new c(new D(2,2)),r=new a({color:`#ffffff`,side:2}),i=new O({depthTest:!1,depthWrite:!1,fragmentShader:Mo,name:`Manifest3D path tracing asset bloom color mask material`,uniforms:{tInput:{value:null},tMask:{value:null}},vertexShader:jo}),o=new O({depthTest:!1,depthWrite:!1,fragmentShader:No,name:`Manifest3D path tracing asset bloom composite material`,uniforms:{tBase:{value:null},tBloom:{value:null}},vertexShader:jo}),s=new fo(new S(1,1),$.bloom.strength,$.bloom.radius,$.bloom.threshold);e.add(n);let l=1,u=1,d=zo(l,u),f=Ro(l,u,`asset-color`),p=Ro(l,u,`combined`),m=Ro(l,u,`bloom-scratch`);function h(e,t,n){let r=Math.max(1,Math.floor(e*n)),i=Math.max(1,Math.floor(t*n));l===r&&u===i||(l=r,u=i,d.setSize(l,u),f.setSize(l,u),p.setSize(l,u),m.setSize(l,u),s.setSize(l,u))}function g(){d.dispose(),f.dispose(),p.dispose(),m.dispose(),r.dispose(),i.dispose(),o.dispose(),s.dispose(),n.geometry.dispose()}function _({camera:e,inputTexture:t,renderer:n,scene:a}){let c=n.getRenderTarget(),l=a.overrideMaterial,u=n.autoClear,h=new k,g=n.getClearAlpha();n.getClearColor(h);try{return Fo(n,a,e,d,r),i.uniforms.tInput.value=t,i.uniforms.tMask.value=d.texture,v(n,i,f),s.renderToScreen=!1,s.render(n,m,f,0,!1),o.uniforms.tBase.value=t,o.uniforms.tBloom.value=s.renderTargetsHorizontal[0].texture,v(n,o,p),p.texture}finally{a.overrideMaterial=l,n.setRenderTarget(c),n.setClearColor(h,g),n.autoClear=u}}function v(r,i,a){n.material=i,r.setRenderTarget(a),r.clear(!0,!1,!1),r.render(e,t)}return{dispose:g,render:_,setSize:h}}function Fo(e,t,n,r,i){let a=Io(t),o=t.background,s=t.overrideMaterial;t.background=null,t.overrideMaterial=i,e.autoClear=!0,e.setClearColor(0,1),e.setRenderTarget(r),e.clear(!0,!0,!0),e.render(t,n),t.background=o,t.overrideMaterial=s,Lo(a)}function Io(e){let t=[];return e.traverse(e=>{Bo(e)&&(t.push({object:e,visible:e.visible}),e.visible=e.visible&&Ao(e))}),t}function Lo(e){for(let t of e)t.object.visible=t.visible}function Ro(e,t,n){let r=new A(e,t,{depthBuffer:!1,format:F,magFilter:M,minFilter:M,stencilBuffer:!1,type:N});return r.texture.name=`Manifest3D path tracing asset bloom ${n}`,r.texture.colorSpace=``,r}function zo(e,t){let n=new A(e,t,{depthBuffer:!0,format:F,magFilter:d,minFilter:d,stencilBuffer:!1,type:ne});return n.texture.name=`Manifest3D path tracing asset bloom mask`,n.texture.colorSpace=``,n}function Bo(e){return e.isMesh===!0}var Vo=new s(.2126,.7152,.0722);function Ho(e,t=$.denoise.emissiveFireflyRecovery){return Uo(Wo(e,t),t)}function Uo(e,t=$.denoise.emissiveFireflyRecovery){if(!t.enabled||e.maxEmissiveLuminance<=0||e.roughDiffuseReceiverArea<=0||e.compactEmitterRisk<=0)return 0;let n=e.darkDiffuseReceiverArea/e.roughDiffuseReceiverArea,r=e.darkDiffuseReceiverArea/Math.max(e.emissiveArea,1e-6),i=Math.max($o(.18,.72,n),$o(1.5,10,r)*.8),a=e.compactEmitterRisk*i;return $o(t.sceneRiskThreshold,1,a)}function Wo(e,t=$.denoise.emissiveFireflyRecovery){let n=[],r=0,i=0,a=0,o=0;return e.updateMatrixWorld(!0),e.traverse(e=>{if(!Qo(e))return;let s=Yo(e),c=Array.isArray(e.material)?e.material:[e.material],l=s/Math.max(c.length,1);for(let e of c){let s=e,c=Jo(s);if(c>0){let e=Math.max(l,1e-6);n.push({area:e,luminance:c}),i+=e,a=Math.max(a,c);continue}if(!Go(s,t))continue;let u=Math.max(l,0),d=qo(s),f=1-$o(t.darkReceiverLowLuminance,t.darkReceiverHighLuminance,d);o+=u,r+=u*f}}),{compactEmitterRisk:n.reduce((e,n)=>{let r=n.area/Math.max(o+n.area,1e-6),i=1-$o(t.smallEmitterAreaRatio,t.wideEmitterAreaRatio,r),a=$o(t.strongEmissionLuminance,t.extremeEmissionLuminance,n.luminance),s=$o(t.extremeEmissionLuminance*.65,t.extremeEmissionLuminance,n.luminance),c=a*Math.max(i,s*.75);return Math.max(e,c)},0),darkDiffuseReceiverArea:r,emissiveArea:i,maxEmissiveLuminance:a,roughDiffuseReceiverArea:o}}function Go(e,t){return!Ko(e)&&(e.roughness??1)>=t.receiverRoughnessMin&&(e.metalness??0)<=t.receiverMetalnessMax}function Ko(e){return!!e.transparent||(e.opacity??1)<.999}function qo(e){let t=e.color??new k(1,1,1);return t.r*Vo.x+t.g*Vo.y+t.b*Vo.z}function Jo(e){let t=e.emissive??new k(0,0,0),n=Math.max(e.emissiveIntensity??0,0);return(t.r*Vo.x+t.g*Vo.y+t.b*Vo.z)*n}function Yo(e){let t=e.geometry.attributes.position;if(!t)return Zo(e);let n=e.geometry.index,r=new s,i=new s,a=new s,o=0;if(n)for(let s=0;s+2<n.count;s+=3)r.fromBufferAttribute(t,n.getX(s)).applyMatrix4(e.matrixWorld),i.fromBufferAttribute(t,n.getX(s+1)).applyMatrix4(e.matrixWorld),a.fromBufferAttribute(t,n.getX(s+2)).applyMatrix4(e.matrixWorld),o+=Xo(r,i,a);else for(let n=0;n+2<t.count;n+=3)r.fromBufferAttribute(t,n).applyMatrix4(e.matrixWorld),i.fromBufferAttribute(t,n+1).applyMatrix4(e.matrixWorld),a.fromBufferAttribute(t,n+2).applyMatrix4(e.matrixWorld),o+=Xo(r,i,a);return o>0?o:Zo(e)}function Xo(e,t,n){return t.clone().sub(e).cross(n.clone().sub(e)).length()*.5}function Zo(e){let t=new P().setFromObject(e);if(t.isEmpty())return 0;let n=t.getSize(new s);return Math.max(2*(n.x*n.y+n.x*n.z+n.y*n.z),0)}function Qo(e){return e.isMesh===!0&&e.visible}function $o(e,t,n){if(e===t)return n<e?0:1;let r=Math.min(Math.max((n-e)/(t-e),0),1);return r*r*(3-2*r)}var es=4,ts=997,ns=`
   varying vec2 vUv;
 
   void main() {
     vUv = uv;
     gl_Position = vec4(position.xy, 0.0, 1.0);
   }
-`,Wo=`
+`,rs=`
   uniform float uCameraFar;
   varying vec2 vUv;
   varying vec3 vViewNormal;
@@ -4236,7 +4236,7 @@ bool bvhIntersectFogVolumeHit(
     vLinearDepth = clamp(-viewPosition.z / max(uCameraFar, 0.0001), 0.0, 1.0);
     gl_Position = projectionMatrix * viewPosition;
   }
-`,Go=`
+`,is=`
   uniform sampler2D tAlphaMap;
   uniform sampler2D tColorMap;
   uniform float uAlphaTest;
@@ -4268,16 +4268,16 @@ bool bvhIntersectFogVolumeHit(
       discard;
     }
   }
-`,Ko=`
-  ${Go}
+`,as=`
+  ${is}
 
   void main() {
     denoiseDiscardTransparentCutout();
 
     gl_FragColor = vec4(normalize(vViewNormal) * 0.5 + 0.5, vLinearDepth);
   }
-`,qo=`
-  ${Go}
+`,os=`
+  ${is}
   uniform float uEmissiveProtection;
   uniform float uObjectKey;
   uniform float uRoughness;
@@ -4296,8 +4296,8 @@ bool bvhIntersectFogVolumeHit(
       uObjectKey
     );
   }
-`,Jo=`
-  ${Go}
+`,ss=`
+  ${is}
   uniform sampler2D tMetalnessMap;
   uniform float uMetalness;
   uniform float uUsesMetalnessMap;
@@ -4319,7 +4319,7 @@ bool bvhIntersectFogVolumeHit(
 
     gl_FragColor = vec4(max(albedo, vec3(0.0)), clamp(metalness, 0.0, 1.0));
   }
-`,Yo=`
+`,cs=`
   float denoiseLuminance(vec3 color) {
     return dot(max(color, vec3(0.0)), vec3(0.2126, 0.7152, 0.0722));
   }
@@ -4441,15 +4441,244 @@ bool bvhIntersectFogVolumeHit(
 
     return clamp(max(max(transparentProtection, emissiveProtection), edgeProtection), 0.0, 1.0);
   }
-`,Xo=`
+`,ls=`
+  uniform sampler2D tGuideAlbedo;
+  uniform sampler2D tGuideGeometry;
   uniform sampler2D tGuideMaterial;
   uniform sampler2D tInput;
   uniform vec2 uTexelSize;
+  uniform float uDarkReceiverHighLuminance;
+  uniform float uDarkReceiverLowLuminance;
+  uniform float uDepthPhi;
+  uniform float uDepthRelativePhi;
+  uniform float uLocalDensityMin;
+  uniform float uLocalMinLuminance;
+  uniform float uLocalMinRatio;
+  uniform float uLocalSigma;
+  uniform float uMaterialPhi;
+  uniform float uNormalPhi;
+  uniform float uRecoveryStrength;
+  varying vec2 vUv;
+
+  ${cs}
+
+  float denoiseFireflyConfidenceKernelWeight(int x, int y) {
+    vec2 offset = vec2(float(x), float(y));
+
+    return exp(-dot(offset, offset) / 5.0);
+  }
+
+  float denoiseFireflyConfidenceSurfaceWeight(
+    vec4 centerAlbedo,
+    vec4 centerGeometry,
+    vec4 centerMaterial,
+    vec3 centerNormal,
+    float centerDepth,
+    vec4 sampleAlbedo,
+    vec4 sampleGeometry,
+    vec4 sampleMaterial
+  ) {
+    vec3 sampleNormal = denoiseDecodeNormal(sampleGeometry.rgb);
+    float normalWeight = exp(
+      -(1.0 - max(dot(centerNormal, sampleNormal), 0.0)) / max(uNormalPhi, 0.0001)
+    );
+    float depthWeight = denoiseDepthWeight(
+      centerDepth,
+      sampleGeometry.a,
+      uDepthPhi,
+      uDepthRelativePhi
+    );
+    float objectWeight = denoiseObjectWeight(centerMaterial.a, sampleMaterial.a);
+    float materialWeight = denoiseMaterialWeight(centerMaterial, sampleMaterial, uMaterialPhi);
+    float albedoWeight = denoiseAlbedoWeight(centerAlbedo, sampleAlbedo);
+    float sampleDiffuseSurface =
+      (1.0 - sampleMaterial.r) *
+      smoothstep(0.45, 0.92, sampleMaterial.g) *
+      (1.0 - smoothstep(0.04, 0.36, sampleAlbedo.a)) *
+      (1.0 - sampleMaterial.b);
+
+    return normalWeight *
+      depthWeight *
+      objectWeight *
+      materialWeight *
+      albedoWeight *
+      sampleDiffuseSurface;
+  }
+
+  void main() {
+    if (uRecoveryStrength <= 0.0001) {
+      gl_FragColor = vec4(0.0);
+      return;
+    }
+
+    vec3 centerColor = texture2D(tInput, vUv).rgb;
+    vec4 centerAlbedo = texture2D(tGuideAlbedo, vUv);
+    vec4 centerGeometry = texture2D(tGuideGeometry, vUv);
+    vec4 centerMaterial = texture2D(tGuideMaterial, vUv);
+    vec3 centerNormal = denoiseDecodeNormal(centerGeometry.rgb);
+    float centerDepth = centerGeometry.a;
+    float guideEdge = denoiseGeometryEdge(
+      tGuideGeometry,
+      tGuideMaterial,
+      vUv,
+      uTexelSize,
+      uDepthPhi,
+      uDepthRelativePhi
+    );
+    float darkReceiver = 1.0 - smoothstep(
+      uDarkReceiverLowLuminance,
+      uDarkReceiverHighLuminance,
+      denoiseLuminance(centerAlbedo.rgb)
+    );
+    float surfaceConfidence =
+      denoiseDiffuseConfidence(centerMaterial, centerAlbedo, guideEdge) *
+      darkReceiver *
+      uRecoveryStrength;
+
+    if (surfaceConfidence <= 0.0001) {
+      gl_FragColor = vec4(0.0);
+      return;
+    }
+
+    float centerLum = denoiseLuminance(centerColor);
+    float centerCompressedLum = denoiseCompressedLuminance(centerColor);
+    float sumWeight = 0.0;
+    float sumLum = 0.0;
+    float sumCompressedLum = 0.0;
+    float sumCompressedLumSq = 0.0;
+
+    for (int y = -2; y <= 2; y++) {
+      for (int x = -2; x <= 2; x++) {
+        if (x == 0 && y == 0) {
+          continue;
+        }
+
+        vec2 sampleUv = clamp(vUv + vec2(float(x), float(y)) * uTexelSize, vec2(0.0), vec2(1.0));
+        vec3 sampleColor = texture2D(tInput, sampleUv).rgb;
+        vec4 sampleAlbedo = texture2D(tGuideAlbedo, sampleUv);
+        vec4 sampleGeometry = texture2D(tGuideGeometry, sampleUv);
+        vec4 sampleMaterial = texture2D(tGuideMaterial, sampleUv);
+        float surfaceWeight = denoiseFireflyConfidenceSurfaceWeight(
+          centerAlbedo,
+          centerGeometry,
+          centerMaterial,
+          centerNormal,
+          centerDepth,
+          sampleAlbedo,
+          sampleGeometry,
+          sampleMaterial
+        );
+        float weight = denoiseFireflyConfidenceKernelWeight(x, y) * surfaceWeight;
+        float sampleLum = denoiseLuminance(sampleColor);
+        float sampleCompressedLum = log(1.0 + sampleLum);
+
+        sumWeight += weight;
+        sumLum += sampleLum * weight;
+        sumCompressedLum += sampleCompressedLum * weight;
+        sumCompressedLumSq += sampleCompressedLum * sampleCompressedLum * weight;
+      }
+    }
+
+    float safeWeight = max(sumWeight, 0.0001);
+    float meanLum = sumLum / safeWeight;
+    float meanCompressedLum = sumCompressedLum / safeWeight;
+    float varianceCompressedLum = max(
+      (sumCompressedLumSq / safeWeight) - (meanCompressedLum * meanCompressedLum),
+      0.0
+    );
+    float sigmaCompressedLum = sqrt(varianceCompressedLum);
+    float limitCompressedLum =
+      meanCompressedLum + sigmaCompressedLum * uLocalSigma;
+    float directSigmaConfidence = smoothstep(
+      0.0,
+      1.0,
+      (centerCompressedLum - limitCompressedLum) /
+        max(sigmaCompressedLum * 0.75, 0.08)
+    );
+    float directRatioConfidence = smoothstep(
+      uLocalMinRatio,
+      uLocalMinRatio * 1.6,
+      centerLum / max(meanLum, 0.0001)
+    );
+    float directFloorConfidence = smoothstep(
+      uLocalMinLuminance,
+      uLocalMinLuminance * 3.0,
+      centerLum
+    );
+    float directConfidence =
+      surfaceConfidence *
+      directSigmaConfidence *
+      directRatioConfidence *
+      directFloorConfidence;
+    float brightNeighborWeight = 0.0;
+
+    for (int y = -2; y <= 2; y++) {
+      for (int x = -2; x <= 2; x++) {
+        vec2 sampleUv = clamp(vUv + vec2(float(x), float(y)) * uTexelSize, vec2(0.0), vec2(1.0));
+        vec3 sampleColor = texture2D(tInput, sampleUv).rgb;
+        vec4 sampleAlbedo = texture2D(tGuideAlbedo, sampleUv);
+        vec4 sampleGeometry = texture2D(tGuideGeometry, sampleUv);
+        vec4 sampleMaterial = texture2D(tGuideMaterial, sampleUv);
+        float surfaceWeight = denoiseFireflyConfidenceSurfaceWeight(
+          centerAlbedo,
+          centerGeometry,
+          centerMaterial,
+          centerNormal,
+          centerDepth,
+          sampleAlbedo,
+          sampleGeometry,
+          sampleMaterial
+        );
+        float weight = denoiseFireflyConfidenceKernelWeight(x, y) * surfaceWeight;
+        float sampleLum = denoiseLuminance(sampleColor);
+        float sampleCompressedLum = log(1.0 + sampleLum);
+        float brightConfidence =
+          smoothstep(
+            limitCompressedLum,
+            limitCompressedLum + max(sigmaCompressedLum, 0.08),
+            sampleCompressedLum
+          ) *
+          smoothstep(
+            uLocalMinRatio,
+            uLocalMinRatio * 1.35,
+            sampleLum / max(meanLum, 0.0001)
+          ) *
+          smoothstep(
+            uLocalMinLuminance,
+            uLocalMinLuminance * 2.5,
+            sampleLum
+          );
+
+        brightNeighborWeight += weight * brightConfidence;
+      }
+    }
+
+    float localBrightDensity = brightNeighborWeight / safeWeight;
+    float densityConfidence = smoothstep(
+      uLocalDensityMin,
+      uLocalDensityMin * 2.5,
+      localBrightDensity
+    ) * surfaceConfidence;
+    float repairConfidence = max(directConfidence, densityConfidence * 0.65);
+
+    gl_FragColor = vec4(
+      clamp(directConfidence, 0.0, 1.0),
+      clamp(surfaceConfidence, 0.0, 1.0),
+      clamp(densityConfidence, 0.0, 1.0),
+      clamp(repairConfidence, 0.0, 1.0)
+    );
+  }
+`,us=`
+  uniform sampler2D tFireflyConfidence;
+  uniform sampler2D tGuideMaterial;
+  uniform sampler2D tInput;
+  uniform vec2 uTexelSize;
+  uniform float uRecoveryClampBlend;
   uniform float uMinRatio;
   uniform float uThresholdSigma;
   varying vec2 vUv;
 
-  ${Yo}
+  ${cs}
 
   void main() {
     vec3 center = texture2D(tInput, vUv).rgb;
@@ -4486,14 +4715,20 @@ bool bvhIntersectFogVolumeHit(
       centerCompressedLum > limitCompressedLum &&
       centerLum > max(meanLum * uMinRatio, 0.0001) &&
       centerMaterial.b < 0.5;
+    float recoveryConfidence = texture2D(tFireflyConfidence, vUv).r;
+    float clampBlend = max(
+      isOutlier ? 1.0 : 0.0,
+      recoveryConfidence * uRecoveryClampBlend
+    );
 
-    if (isOutlier && centerLum > 0.0001) {
-      center *= limitLum / centerLum;
+    if (clampBlend > 0.0001 && centerLum > 0.0001) {
+      center = mix(center, center * (limitLum / centerLum), clamp(clampBlend, 0.0, 1.0));
     }
 
     gl_FragColor = vec4(center, 1.0);
   }
-`,Zo=`
+`,ds=`
+  uniform sampler2D tFireflyConfidence;
   uniform sampler2D tGuideAlbedo;
   uniform sampler2D tGuideGeometry;
   uniform sampler2D tGuideMaterial;
@@ -4503,6 +4738,7 @@ bool bvhIntersectFogVolumeHit(
   uniform float uDepthPhi;
   uniform float uDepthRelativePhi;
   uniform float uDetailProtection;
+  uniform float uFireflyNeighborReject;
   uniform float uMaterialPhi;
   uniform float uNormalPhi;
   uniform float uStepWidth;
@@ -4510,7 +4746,7 @@ bool bvhIntersectFogVolumeHit(
   uniform float uTransparencyProtection;
   varying vec2 vUv;
 
-  ${Yo}
+  ${cs}
 
   float denoiseKernelWeight(int offset) {
     int magnitude = abs(offset);
@@ -4557,6 +4793,7 @@ bool bvhIntersectFogVolumeHit(
         vec2 offset = vec2(float(x), float(y)) * uTexelSize * uStepWidth;
         vec2 sampleUv = clamp(vUv + offset, vec2(0.0), vec2(1.0));
         vec3 sampleColor = texture2D(tInput, sampleUv).rgb;
+        vec4 sampleFireflyConfidence = texture2D(tFireflyConfidence, sampleUv);
         vec4 sampleAlbedo = texture2D(tGuideAlbedo, sampleUv);
         vec4 sampleGeometry = texture2D(tGuideGeometry, sampleUv);
         vec4 sampleMaterial = texture2D(tGuideMaterial, sampleUv);
@@ -4583,6 +4820,15 @@ bool bvhIntersectFogVolumeHit(
           0.34,
           max(centerMaterial.r, sampleMaterial.r) * smoothstep(1.0, 4.0, uStepWidth)
         );
+        float fireflyVoteConfidence = max(
+          sampleFireflyConfidence.r,
+          sampleFireflyConfidence.a * 0.55
+        );
+        float fireflyVoteWeight = mix(
+          1.0,
+          max(1.0 - uFireflyNeighborReject, 0.02),
+          clamp(fireflyVoteConfidence, 0.0, 1.0)
+        );
         float weight =
           spatialWeight *
           colorWeight *
@@ -4591,7 +4837,8 @@ bool bvhIntersectFogVolumeHit(
           objectWeight *
           materialWeight *
           albedoWeight *
-          transparencyStepAttenuation;
+          transparencyStepAttenuation *
+          fireflyVoteWeight;
 
         sumColor += sampleColor * weight;
         sumWeight += weight;
@@ -4601,7 +4848,8 @@ bool bvhIntersectFogVolumeHit(
     vec3 filteredColor = sumColor / max(sumWeight, 0.0001);
     gl_FragColor = vec4(mix(filteredColor, centerColor, rawProtection), 1.0);
   }
-`,Qo=`
+`,fs=`
+  uniform sampler2D tFireflyConfidence;
   uniform sampler2D tGuideAlbedo;
   uniform sampler2D tGuideGeometry;
   uniform sampler2D tGuideMaterial;
@@ -4612,12 +4860,14 @@ bool bvhIntersectFogVolumeHit(
   uniform float uDepthRelativePhi;
   uniform float uDiffuseBlend;
   uniform float uDiffuseIlluminationPhi;
+  uniform float uFireflyDiffuseBlendBoost;
+  uniform float uFireflyNeighborReject;
   uniform float uMaterialPhi;
   uniform float uNormalPhi;
   uniform float uStepWidth;
   varying vec2 vUv;
 
-  ${Yo}
+  ${cs}
 
   float denoiseDiffuseKernelWeight(int offset) {
     int magnitude = abs(offset);
@@ -4656,6 +4906,7 @@ bool bvhIntersectFogVolumeHit(
       centerAlbedoGuide,
       guideEdge
     );
+    float recoveryRepairConfidence = texture2D(tFireflyConfidence, vUv).a;
     vec3 sumIllumination = vec3(0.0);
     float sumWeight = 0.0;
 
@@ -4664,6 +4915,7 @@ bool bvhIntersectFogVolumeHit(
         vec2 offset = vec2(float(x), float(y)) * uTexelSize * uStepWidth;
         vec2 sampleUv = clamp(vUv + offset, vec2(0.0), vec2(1.0));
         vec3 sampleColor = texture2D(tInput, sampleUv).rgb;
+        vec4 sampleFireflyConfidence = texture2D(tFireflyConfidence, sampleUv);
         vec4 sampleAlbedoGuide = texture2D(tGuideAlbedo, sampleUv);
         vec4 sampleGeometry = texture2D(tGuideGeometry, sampleUv);
         vec4 sampleMaterial = texture2D(tGuideMaterial, sampleUv);
@@ -4693,6 +4945,15 @@ bool bvhIntersectFogVolumeHit(
           smoothstep(0.45, 0.92, sampleMaterial.g) *
           (1.0 - smoothstep(0.04, 0.36, sampleAlbedoGuide.a)) *
           (1.0 - sampleMaterial.b);
+        float fireflyVoteConfidence = max(
+          sampleFireflyConfidence.r,
+          sampleFireflyConfidence.a * 0.55
+        );
+        float fireflyVoteWeight = mix(
+          1.0,
+          max(1.0 - uFireflyNeighborReject, 0.02),
+          clamp(fireflyVoteConfidence, 0.0, 1.0)
+        );
         float weight =
           spatialWeight *
           illuminationWeight *
@@ -4701,7 +4962,8 @@ bool bvhIntersectFogVolumeHit(
           objectWeight *
           materialWeight *
           albedoWeight *
-          sampleDiffuseSurface;
+          sampleDiffuseSurface *
+          fireflyVoteWeight;
 
         sumIllumination += sampleIllumination * weight;
         sumWeight += weight;
@@ -4710,12 +4972,14 @@ bool bvhIntersectFogVolumeHit(
 
     vec3 filteredIllumination = sumIllumination / max(sumWeight, 0.0001);
     vec3 diffuseColor = filteredIllumination * centerAlbedo;
-    float blendAmount = diffuseConfidence * uDiffuseBlend;
+    float blendAmount = diffuseConfidence *
+      min(1.0, uDiffuseBlend + recoveryRepairConfidence * uFireflyDiffuseBlendBoost);
 
     gl_FragColor = vec4(mix(centerColor, diffuseColor, blendAmount), 1.0);
   }
-`,$o=`
+`,ps=`
   uniform sampler2D tDiffuse;
+  uniform sampler2D tFireflyConfidence;
   uniform sampler2D tFiltered;
   uniform sampler2D tFirefly;
   uniform sampler2D tGuideAlbedo;
@@ -4726,16 +4990,19 @@ bool bvhIntersectFogVolumeHit(
   uniform float uDepthPhi;
   uniform float uDepthRelativePhi;
   uniform float uDetailProtection;
+  uniform float uFireflyCompositeBoost;
+  uniform float uFireflyRawProtectionReduction;
   uniform float uResidualBlend;
   uniform float uTransparencyInteriorProtection;
   uniform float uTransparencyProtection;
   varying vec2 vUv;
 
-  ${Yo}
+  ${cs}
 
   void main() {
     vec3 rawColor = texture2D(tRaw, vUv).rgb;
     vec3 fireflyColor = texture2D(tFirefly, vUv).rgb;
+    vec4 fireflyConfidence = texture2D(tFireflyConfidence, vUv);
     vec3 filteredColor = texture2D(tFiltered, vUv).rgb;
     vec3 diffuseColor = texture2D(tDiffuse, vUv).rgb;
     vec4 albedoGuide = texture2D(tGuideAlbedo, vUv);
@@ -4756,12 +5023,19 @@ bool bvhIntersectFogVolumeHit(
       uTransparencyProtection
     );
     float diffuseConfidence = denoiseDiffuseConfidence(materialGuide, albedoGuide, guideEdge);
+    float recoveryRepairConfidence = fireflyConfidence.a;
+    rawProtection *= 1.0 - recoveryRepairConfidence * uFireflyRawProtectionReduction;
     float residual = length(denoiseCompressedColor(fireflyColor) - denoiseCompressedColor(filteredColor));
-    float residualConfidence = smoothstep(0.025, 0.22, residual);
-    float diffuseBlend = diffuseConfidence * (0.35 + residualConfidence * 0.65) * uResidualBlend;
+    float residualConfidence = max(
+      smoothstep(0.025, 0.22, residual),
+      recoveryRepairConfidence
+    );
+    float diffuseBlend = diffuseConfidence *
+      (0.35 + residualConfidence * 0.65) *
+      min(1.0, uResidualBlend + recoveryRepairConfidence * uFireflyCompositeBoost);
     vec3 denoisedColor = mix(filteredColor, diffuseColor, diffuseBlend);
     vec3 protectedColor = mix(fireflyColor, rawColor, materialGuide.b);
 
     gl_FragColor = vec4(mix(denoisedColor, protectedColor, rawProtection), 1.0);
   }
-`;function es(e=$.denoise){let t=new te,n=new ee(-1,1,1,-1,0,1),r=new c(new D(2,2)),i=new O({depthTest:!1,depthWrite:!1,fragmentShader:Xo,name:`Manifest3D path tracing denoise firefly clamp material`,uniforms:{tGuideMaterial:{value:null},tInput:{value:null},uMinRatio:{value:e.fireflyMinRatio},uTexelSize:{value:new S(1,1)},uThresholdSigma:{value:e.fireflyClampSigma}},vertexShader:Uo}),a=new O({depthTest:!1,depthWrite:!1,fragmentShader:Zo,name:`Manifest3D path tracing denoise adaptive à-trous material`,uniforms:{tGuideAlbedo:{value:null},tGuideGeometry:{value:null},tGuideMaterial:{value:null},tInput:{value:null},uColorPhi:{value:e.colorPhi},uDepthPhi:{value:e.depthPhi},uDepthRelativePhi:{value:e.depthRelativePhi},uDetailProtection:{value:e.detailProtection},uMaterialPhi:{value:e.materialPhi},uNormalPhi:{value:e.normalPhi},uStepWidth:{value:1},uTexelSize:{value:new S(1,1)},uTransparencyInteriorProtection:{value:e.transparencyInteriorProtection},uTransparencyProtection:{value:e.transparencyProtection}},vertexShader:Uo}),o=new O({depthTest:!1,depthWrite:!1,fragmentShader:Qo,name:`Manifest3D path tracing denoise diffuse illumination material`,uniforms:{tGuideAlbedo:{value:null},tGuideGeometry:{value:null},tGuideMaterial:{value:null},tInput:{value:null},uAlbedoFloor:{value:e.albedoFloor},uDepthPhi:{value:e.depthPhi},uDepthRelativePhi:{value:e.depthRelativePhi},uDiffuseBlend:{value:e.diffuseBlend},uDiffuseIlluminationPhi:{value:e.diffuseIlluminationPhi},uMaterialPhi:{value:e.materialPhi},uNormalPhi:{value:e.normalPhi},uStepWidth:{value:1},uTexelSize:{value:new S(1,1)}},vertexShader:Uo}),s=new O({depthTest:!1,depthWrite:!1,fragmentShader:$o,name:`Manifest3D path tracing denoise final detail composite material`,uniforms:{tDiffuse:{value:null},tFiltered:{value:null},tFirefly:{value:null},tGuideAlbedo:{value:null},tGuideGeometry:{value:null},tGuideMaterial:{value:null},tRaw:{value:null},uDepthPhi:{value:e.depthPhi},uDepthRelativePhi:{value:e.depthRelativePhi},uDetailProtection:{value:e.detailProtection},uResidualBlend:{value:e.residualBlend},uTexelSize:{value:new S(1,1)},uTransparencyInteriorProtection:{value:e.transparencyInteriorProtection},uTransparencyProtection:{value:e.transparencyProtection}},vertexShader:Uo});t.add(r);let l=1,u=1,d=!1,f=new Map,p=gs(l,u,`albedo`),m=gs(l,u,`geometry`),h=gs(l,u,`material`),g=hs(l,u,`diffuse-a`),_=hs(l,u,`diffuse-b`),v=hs(l,u,`firefly`),y=hs(l,u,`ping-a`),b=hs(l,u,`ping-b`),x=hs(l,u,`composite`);function C(){p.dispose(),m.dispose(),h.dispose(),g.dispose(),_.dispose(),v.dispose(),y.dispose(),b.dispose(),x.dispose()}function w(){for(let e of f.values())e.albedo.dispose(),e.geometry.dispose(),e.material.dispose();f.clear()}function T(e,t,n){let r=Math.max(1,Math.floor(e*n)),c=Math.max(1,Math.floor(t*n));l===r&&u===c||(l=r,u=c,p.setSize(l,u),m.setSize(l,u),h.setSize(l,u),g.setSize(l,u),_.setSize(l,u),v.setSize(l,u),y.setSize(l,u),b.setSize(l,u),x.setSize(l,u),i.uniforms.uTexelSize.value.set(1/l,1/u),a.uniforms.uTexelSize.value.set(1/l,1/u),o.uniforms.uTexelSize.value.set(1/l,1/u),s.uniforms.uTexelSize.value.set(1/l,1/u))}function E(){d=!1,w()}function ne(){C(),w(),i.dispose(),a.dispose(),o.dispose(),s.dispose(),r.geometry.dispose()}function re({camera:t,inputTexture:n,renderer:r,scene:c}){if(d)return ts(n);let l=r.getRenderTarget(),u=c.overrideMaterial,f=c.background,S=r.autoClear,C=new k,w=r.getClearAlpha();r.getClearColor(C);try{if(r.autoClear=!0,c.overrideMaterial=null,c.background=null,ie(t),ae(r,c,t,m,`geometry`),cs(r)||(ae(r,c,t,h,`material`),cs(r))||(ae(r,c,t,p,`albedo`),cs(r))||(i.uniforms.tGuideMaterial.value=h.texture,i.uniforms.tInput.value=n,ce(r,i,v),cs(r)))return d=!0,ts(n);let l=v.texture,u=g;o.uniforms.tGuideAlbedo.value=p.texture,o.uniforms.tGuideGeometry.value=m.texture,o.uniforms.tGuideMaterial.value=h.texture;for(let t of as(e.atrousPasses)){if(o.uniforms.tInput.value=l,o.uniforms.uStepWidth.value=t,ce(r,o,u),cs(r))return d=!0,ts(n);l=u.texture,u=u===g?_:g}a.uniforms.tGuideAlbedo.value=p.texture,a.uniforms.tGuideGeometry.value=m.texture,a.uniforms.tGuideMaterial.value=h.texture;let f=v.texture,S=y;for(let t of is(e.atrousPasses)){if(a.uniforms.tInput.value=f,a.uniforms.uStepWidth.value=t,ce(r,a,S),cs(r))return d=!0,ts(n);f=S.texture,S=S===y?b:y}return s.uniforms.tDiffuse.value=l,s.uniforms.tFiltered.value=f,s.uniforms.tFirefly.value=v.texture,s.uniforms.tGuideAlbedo.value=p.texture,s.uniforms.tGuideGeometry.value=m.texture,s.uniforms.tGuideMaterial.value=h.texture,s.uniforms.tRaw.value=n,ce(r,s,x),cs(r)?(d=!0,ts(n)):{status:`denoised`,texture:x.texture}}finally{c.overrideMaterial=u,c.background=f,r.setRenderTarget(l),r.setClearColor(C,w),r.autoClear=S}}function ie(t){let n=ss(e.depthPhi,t.far);for(let e of f.values())e.albedo.uniforms.uCameraFar.value=t.far,e.geometry.uniforms.uCameraFar.value=t.far,e.material.uniforms.uCameraFar.value=t.far;a.uniforms.uDepthPhi.value=n,o.uniforms.uDepthPhi.value=n,s.uniforms.uDepthPhi.value=n}function ae(e,t,n,r,i){let a=oe(t,i);try{i===`geometry`?e.setClearColor(8421631,1):i===`albedo`?e.setClearColor(16777215,1):e.setClearColor(new k(0,1,0),0),e.setRenderTarget(r),e.clear(!0,!0,!0),e.render(t,n)}finally{ms(a)}}function oe(e,t){let n=[];return e.traverse(e=>{_s(e)&&(n.push({material:e.material,object:e}),e.material=Array.isArray(e.material)?e.material.map(e=>se(e,t)):se(e.material,t))}),n}function se(e,t){let n=f.get(e);return n||(n=ls(e),f.set(e,n)),t===`geometry`?n.geometry:t===`albedo`?n.albedo:n.material}function ce(e,i,a){r.material=i,e.setRenderTarget(a),e.clear(!0,!1,!1),e.render(t,n)}return{dispose:ne,render:re,reset:E,setSize:T}}function ts(e){return{status:`error`,texture:e}}function ns({enabled:e,maxSamples:t,sampleCount:n}){return e&&t>0&&n>=t}function rs(e){return e!==0}function is(e){let t=Math.max(0,Math.min(Vo,Math.floor(e)));return Array.from({length:t},(e,t)=>2**t)}function as(e){return is(e+1)}function os(e){return(Math.max(1,Math.floor(Math.abs(e)))*16807%(Ho-1)+1)/Ho}function ss(e,t){return!Number.isFinite(e)||!Number.isFinite(t)||t<=0?.001:Math.max(e/t,1e-6)}function cs(e){return rs(e.getContext().getError())}function ls(e){let t=e,n=us(t),r=new O({depthTest:t.depthTest,depthWrite:!0,fragmentShader:Ko,name:`Manifest3D path tracing denoise geometry guide material`,side:t.side,transparent:!1,uniforms:le.clone(n),vertexShader:Wo,visible:t.visible}),i=new O({depthTest:t.depthTest,depthWrite:!0,fragmentShader:qo,name:`Manifest3D path tracing denoise material guide material`,side:t.side,transparent:!1,uniforms:le.clone({...n,uEmissiveProtection:{value:fs(t)},uObjectKey:{value:0},uRoughness:{value:t.roughness??1},uTransparent:{value:t.transparent||t.opacity<.999?1:0}}),vertexShader:Wo,visible:t.visible}),a=new O({depthTest:t.depthTest,depthWrite:!0,fragmentShader:Jo,name:`Manifest3D path tracing denoise albedo guide material`,side:t.side,transparent:!1,uniforms:le.clone({...n,tMetalnessMap:{value:t.metalnessMap??null},uBaseColor:{value:ds(t)},uMetalness:{value:t.metalness??0},uUsesMetalnessMap:{value:+!!t.metalnessMap}}),vertexShader:Wo,visible:t.visible});return a.onBeforeRender=(e,t,n)=>{a.uniforms.uCameraFar.value=ps(n)},r.onBeforeRender=(e,t,n)=>{r.uniforms.uCameraFar.value=ps(n)},i.onBeforeRender=(e,t,n,r,a)=>{i.uniforms.uCameraFar.value=ps(n),i.uniforms.uObjectKey.value=os(a.id)},{albedo:a,geometry:r,material:i}}function us(e){return{tAlphaMap:{value:e.alphaMap??null},tColorMap:{value:e.map??null},uAlphaTest:{value:e.alphaTest??0},uCameraFar:{value:80},uOpacity:{value:e.opacity??1},uUsesAlphaMap:{value:+!!e.alphaMap},uUsesColorMap:{value:+!!e.map}}}function ds(e){return e.color?.clone()??new k(1,1,1)}function fs(e){let t=e.emissive??new k(0,0,0),n=e.emissiveIntensity??0,r=t.r*.2126+t.g*.7152+t.b*.0722;return Math.min(1,r*Math.max(n,0))}function ps(e){return e instanceof u?e.far:80}function ms(e){for(let t of e)t.object.material=t.material}function hs(e,t,n){let r=new A(e,t,{depthBuffer:!1,format:F,magFilter:M,minFilter:M,stencilBuffer:!1,type:N});return r.texture.name=`Manifest3D path tracing denoise ${n}`,r.texture.colorSpace=``,r}function gs(e,t,n){let r=new A(e,t,{depthBuffer:!0,format:F,magFilter:d,minFilter:d,stencilBuffer:!1,type:N});return r.texture.name=`Manifest3D path tracing denoise ${n} guide`,r.texture.colorSpace=``,r}function _s(e){return e.isMesh===!0}function vs(e,t,n=`idle`){let r=`${e} / ${t} samples`;return n===`denoising`?`${r} (denoising)`:n===`denoised`?`${r} (denoised)`:n===`not-denoised`?`${r} (not denoised)`:n===`not-denoised-error`?`${r} (not denoised - error)`:r}function ys({maxSamples:e,needsSceneUpload:t,sampleCount:n}){return t||n<e}var bs=`manifest3d:pathtracer-max-samples`,xs=$.maxSampleOptions[0];function Ss(){return[...$.maxSampleOptions]}function Cs(){if(typeof window>`u`)return xs;try{return Ts(window.localStorage.getItem(bs))}catch{return xs}}function ws(e){if(!(typeof window>`u`))try{window.localStorage.setItem(bs,Es(e))}catch{}}function Ts(e){let t=typeof e==`number`?e:Number.parseInt(String(e),10);return Ds(t)?t:xs}function Es(e){return String(e)}function Ds(e){return $.maxSampleOptions.includes(e)}function Os(e){let t=e.getSize(new S);return e.setScissorTest(!1),e.setViewport(0,0,t.x,t.y),t}var ks=Te(),As=co();function js({assets:e,cameraSnapshot:t,denoiseEnabled:n,jointPreviewPosesByInstance:r,leftPanelOcclusionWidth:i,materialAnimationValuesByInstance:a,rightPanelOcclusionWidth:o,worldMode:s}){let c=(0,X.useRef)(null),l=(0,X.useRef)(null),d=(0,X.useRef)(null),f=(0,X.useRef)(null),p=(0,X.useRef)(null),m=(0,X.useRef)(null),h=(0,X.useRef)(!1),g=(0,X.useRef)(null),_=(0,X.useRef)(null),v=(0,X.useRef)(null),y=(0,X.useMemo)(()=>Ss(),[]),[b,x]=(0,X.useState)(()=>Cs()),S=(0,X.useRef)(b),C=(0,X.useRef)(t??As),w=(0,X.useRef)(i),T=(0,X.useRef)(o),E=(0,X.useRef)({height:1,width:1}),ee=(0,X.useRef)(n),[D,O]=(0,X.useState)({height:1,width:1}),k=(0,X.useMemo)(()=>De(D.width,D.height,window.devicePixelRatio),[D.height,D.width]);return(0,X.useEffect)(()=>{let e=l.current;if(!e)return;let t=new ResizeObserver(([e])=>{let{height:t,width:n}=e.contentRect;O({height:Math.max(1,Math.floor(t)),width:Math.max(1,Math.floor(n))})});return t.observe(e),()=>t.disconnect()},[]),(0,X.useEffect)(()=>{let e=c.current;if(!e)return;let t=new ve({alpha:!1,antialias:!0,canvas:e,powerPreference:`high-performance`}),n=new u(38,1,.1,80),r=new te,i=new so(t),a=new jr,o=new Ar,s=new Or(t),l=es(),d=Po();return t.autoClear=!0,t.outputColorSpace=ge,t.toneMapping=4,t.toneMappingExposure=$.toneMappingExposure,i.bounces=$.bounces,i.filterGlossyFactor=$.filterGlossyFactor,i.minSamples=$.minSamples,i.renderDelay=$.renderDelayMs,i.fadeDuration=0,i.dynamicLowRes=!1,i.lowResScale=1,i.renderScale=1,i.rasterizeScene=!1,i.renderToCanvas=!1,i.tiles.set(...$.tiles),i.textureSize.set($.maxTextureSize,$.maxTextureSize),s.addPass(a),s.addPass(o),p.current={assetBloomPipeline:d,camera:n,composer:s,denoisePipeline:l,pathTracer:i,renderer:t,scene:r,texturePass:a},h.current=!0,Ns(v),()=>{m.current?.(),m.current=null,p.current=null,i.dispose(),s.dispose(),l.dispose(),d.dispose(),a.dispose(),o.dispose(),t.dispose()}},[]),(0,X.useEffect)(()=>{E.current=D;let e=p.current;e&&(Ps(e,D,k),Fs({lastPublishedSampleCounterTextRef:g,leftPanelOcclusionWidth:w.current,maxSamples:S.current,rightPanelOcclusionWidth:T.current,runtime:e,sampleCounterRef:f,snapshot:C.current,viewportSize:D}),Ns(v))},[k,D]),(0,X.useEffect)(()=>{C.current=t??As,w.current=i,T.current=o;let e=p.current;e&&(Fs({lastPublishedSampleCounterTextRef:g,leftPanelOcclusionWidth:i,maxSamples:S.current,rightPanelOcclusionWidth:o,runtime:e,sampleCounterRef:f,snapshot:C.current,viewportSize:E.current}),Ns(v))},[t,i,o]),(0,X.useEffect)(()=>{let t=p.current;t&&(m.current?.(),m.current=go({assets:e,jointPreviewPosesByInstance:r,materialAnimationValuesByInstance:a,scene:t.scene,worldMode:s}),h.current=!0,Ms({lastPublishedSampleCounterTextRef:g,maxSamples:S.current,sampleCount:0,sampleCounterRef:f}),Ns(v))},[e,r,a,s]),(0,X.useEffect)(()=>{ee.current=n,Ns(v)},[n]),(0,X.useEffect)(()=>{S.current=b,ws(b);let e=p.current;Ms({lastPublishedSampleCounterTextRef:g,maxSamples:b,sampleCount:e?Math.min(b,Math.floor(e.pathTracer.samples)):0,sampleCounterRef:f}),Ns(v)},[b]),(0,X.useEffect)(()=>{let e=!1;function t(){e||_.current!==null||(_.current=requestAnimationFrame(n))}function n(){_.current=null;let n=p.current;if(!n||e)return;h.current&&(Is(n.camera,C.current,E.current,w.current,T.current),Ls(n),h.current=!1,Ms({lastPublishedSampleCounterTextRef:g,maxSamples:S.current,sampleCount:0,sampleCounterRef:f}));let r=S.current;n.pathTracer.samples<r&&n.pathTracer.renderSample();let i=Math.min(r,Math.floor(n.pathTracer.samples)),a=n.pathTracer.samples>=r;ns({enabled:$.denoise.enabled&&ee.current,maxSamples:r,sampleCount:n.pathTracer.samples})&&Ms({denoiseStatus:`denoising`,lastPublishedSampleCounterTextRef:g,maxSamples:r,sampleCount:i,sampleCounterRef:f});let o=Rs(n,ee.current,r);Os(n.renderer),n.texturePass.map=n.assetBloomPipeline.render({camera:n.camera,inputTexture:o.texture,renderer:n.renderer,scene:n.scene}),n.composer.render(),Ms({denoiseStatus:o.denoiseStatus??(a?`not-denoised`:`idle`),lastPublishedSampleCounterTextRef:g,maxSamples:r,sampleCount:i,sampleCounterRef:f}),ys({maxSamples:r,needsSceneUpload:h.current,sampleCount:n.pathTracer.samples})&&t()}return v.current=t,t(),()=>{e=!0,v.current=null,_.current!==null&&(cancelAnimationFrame(_.current),_.current=null)}},[]),(0,ks.jsxs)(`div`,{className:`pathtracing-stage`,ref:l,children:[(0,ks.jsx)(`canvas`,{ref:c}),(0,ks.jsxs)(`details`,{className:`pathtracing-sample-counter`,onBlur:e=>{let t=e.relatedTarget;(!(t instanceof Node)||!e.currentTarget.contains(t))&&(e.currentTarget.open=!1)},ref:d,children:[(0,ks.jsx)(`summary`,{"aria-haspopup":`menu`,className:`pathtracing-sample-counter__button`,children:(0,ks.jsx)(`span`,{"aria-live":`polite`,ref:f,role:`status`,children:vs(0,b)})}),(0,ks.jsx)(`div`,{className:`pathtracing-sample-counter__menu`,role:`menu`,children:y.map(e=>(0,ks.jsxs)(`button`,{"aria-checked":e===b,className:e===b?`is-selected`:void 0,onClick:()=>{x(e),d.current&&(d.current.open=!1)},role:`menuitemradio`,type:`button`,children:[e,` samples`]},e))})]})]})}function Ms({denoiseStatus:e=`idle`,lastPublishedSampleCounterTextRef:t,maxSamples:n,sampleCount:r,sampleCounterRef:i}){let a=vs(r,n,e);t.current!==a&&(t.current=a,i.current&&(i.current.textContent=a))}function Ns(e){e.current?.()}function Ps(e,t,n){let r=t.width,i=t.height;e.renderer.setPixelRatio(n),e.renderer.setSize(r,i,!1),e.composer.setPixelRatio(n),e.composer.setSize(r,i),e.assetBloomPipeline.setSize(r,i,n),e.denoisePipeline.setSize(r,i,n)}function Fs({lastPublishedSampleCounterTextRef:e,leftPanelOcclusionWidth:t,maxSamples:n,rightPanelOcclusionWidth:r,runtime:i,sampleCounterRef:a,snapshot:o,viewportSize:s}){Is(i.camera,o,s,t,r),i.pathTracer.updateCamera(),i.pathTracer.reset(),i.denoisePipeline.reset(),Ms({lastPublishedSampleCounterTextRef:e,maxSamples:n,sampleCount:0,sampleCounterRef:a})}function Is(e,t,n,r,i){lo({camera:e,leftPanelOcclusionWidth:r,rightPanelOcclusionWidth:i,snapshot:t,viewportSize:n})}function Ls(e){e.scene.updateMatrixWorld(!0),e.pathTracer.setScene(e.scene,e.camera),e.pathTracer.reset(),e.denoisePipeline.reset()}function Rs(e,t,n){if(!ns({enabled:$.denoise.enabled&&t,maxSamples:n,sampleCount:e.pathTracer.samples}))return{texture:e.pathTracer.target.texture};let r=e.denoisePipeline.render({camera:e.camera,inputTexture:e.pathTracer.target.texture,renderer:e.renderer,scene:e.scene});return{denoiseStatus:r.status===`denoised`?`denoised`:`not-denoised-error`,texture:r.texture}}export{js as PathTracingCanvas,js as default};
+`;function ms(e=$.denoise){let t=e.emissiveFireflyRecovery,n=new te,r=new ee(-1,1,1,-1,0,1),i=new c(new D(2,2)),a=new O({depthTest:!1,depthWrite:!1,fragmentShader:ls,name:`Manifest3D path tracing denoise emissive firefly confidence material`,uniforms:{tGuideAlbedo:{value:null},tGuideGeometry:{value:null},tGuideMaterial:{value:null},tInput:{value:null},uDarkReceiverHighLuminance:{value:t.darkReceiverHighLuminance},uDarkReceiverLowLuminance:{value:t.darkReceiverLowLuminance},uDepthPhi:{value:e.depthPhi},uDepthRelativePhi:{value:e.depthRelativePhi},uLocalDensityMin:{value:t.localDensityMin},uLocalMinLuminance:{value:t.localMinLuminance},uLocalMinRatio:{value:t.localMinRatio},uLocalSigma:{value:t.localSigma},uMaterialPhi:{value:e.materialPhi},uNormalPhi:{value:e.normalPhi},uRecoveryStrength:{value:0},uTexelSize:{value:new S(1,1)}},vertexShader:ns}),o=new O({depthTest:!1,depthWrite:!1,fragmentShader:us,name:`Manifest3D path tracing denoise firefly clamp material`,uniforms:{tFireflyConfidence:{value:null},tGuideMaterial:{value:null},tInput:{value:null},uMinRatio:{value:e.fireflyMinRatio},uRecoveryClampBlend:{value:t.clampBlend},uTexelSize:{value:new S(1,1)},uThresholdSigma:{value:e.fireflyClampSigma}},vertexShader:ns}),s=new O({depthTest:!1,depthWrite:!1,fragmentShader:ds,name:`Manifest3D path tracing denoise adaptive à-trous material`,uniforms:{tFireflyConfidence:{value:null},tGuideAlbedo:{value:null},tGuideGeometry:{value:null},tGuideMaterial:{value:null},tInput:{value:null},uColorPhi:{value:e.colorPhi},uDepthPhi:{value:e.depthPhi},uDepthRelativePhi:{value:e.depthRelativePhi},uDetailProtection:{value:e.detailProtection},uFireflyNeighborReject:{value:t.neighborReject},uMaterialPhi:{value:e.materialPhi},uNormalPhi:{value:e.normalPhi},uStepWidth:{value:1},uTexelSize:{value:new S(1,1)},uTransparencyInteriorProtection:{value:e.transparencyInteriorProtection},uTransparencyProtection:{value:e.transparencyProtection}},vertexShader:ns}),l=new O({depthTest:!1,depthWrite:!1,fragmentShader:fs,name:`Manifest3D path tracing denoise diffuse illumination material`,uniforms:{tFireflyConfidence:{value:null},tGuideAlbedo:{value:null},tGuideGeometry:{value:null},tGuideMaterial:{value:null},tInput:{value:null},uAlbedoFloor:{value:e.albedoFloor},uDepthPhi:{value:e.depthPhi},uDepthRelativePhi:{value:e.depthRelativePhi},uDiffuseBlend:{value:e.diffuseBlend},uDiffuseIlluminationPhi:{value:e.diffuseIlluminationPhi},uFireflyDiffuseBlendBoost:{value:t.diffuseBlendBoost},uFireflyNeighborReject:{value:t.neighborReject},uMaterialPhi:{value:e.materialPhi},uNormalPhi:{value:e.normalPhi},uStepWidth:{value:1},uTexelSize:{value:new S(1,1)}},vertexShader:ns}),u=new O({depthTest:!1,depthWrite:!1,fragmentShader:ps,name:`Manifest3D path tracing denoise final detail composite material`,uniforms:{tDiffuse:{value:null},tFireflyConfidence:{value:null},tFiltered:{value:null},tFirefly:{value:null},tGuideAlbedo:{value:null},tGuideGeometry:{value:null},tGuideMaterial:{value:null},tRaw:{value:null},uDepthPhi:{value:e.depthPhi},uDepthRelativePhi:{value:e.depthRelativePhi},uDetailProtection:{value:e.detailProtection},uFireflyCompositeBoost:{value:t.compositeBoost},uFireflyRawProtectionReduction:{value:t.rawProtectionReduction},uResidualBlend:{value:e.residualBlend},uTexelSize:{value:new S(1,1)},uTransparencyInteriorProtection:{value:e.transparencyInteriorProtection},uTransparencyProtection:{value:e.transparencyProtection}},vertexShader:ns});n.add(i);let d=1,f=1,p=!1,m=new Map,h=js(d,f,`albedo`),g=js(d,f,`geometry`),_=js(d,f,`material`),v=ks(d,f,`diffuse-a`),y=ks(d,f,`diffuse-b`),b=As(d,f,`emissive-firefly-confidence`),x=ks(d,f,`firefly`),C=ks(d,f,`ping-a`),w=ks(d,f,`ping-b`),T=ks(d,f,`composite`);function E(){h.dispose(),g.dispose(),_.dispose(),v.dispose(),y.dispose(),b.dispose(),x.dispose(),C.dispose(),w.dispose(),T.dispose()}function ne(){for(let e of m.values())e.albedo.dispose(),e.geometry.dispose(),e.material.dispose();m.clear()}function re(e,t,n){let r=Math.max(1,Math.floor(e*n)),i=Math.max(1,Math.floor(t*n));d===r&&f===i||(d=r,f=i,h.setSize(d,f),g.setSize(d,f),_.setSize(d,f),v.setSize(d,f),y.setSize(d,f),b.setSize(d,f),x.setSize(d,f),C.setSize(d,f),w.setSize(d,f),T.setSize(d,f),a.uniforms.uTexelSize.value.set(1/d,1/f),o.uniforms.uTexelSize.value.set(1/d,1/f),s.uniforms.uTexelSize.value.set(1/d,1/f),l.uniforms.uTexelSize.value.set(1/d,1/f),u.uniforms.uTexelSize.value.set(1/d,1/f))}function ie(){p=!1,ne()}function ae(){E(),ne(),o.dispose(),a.dispose(),s.dispose(),l.dispose(),u.dispose(),i.geometry.dispose()}function oe({camera:n,inputTexture:r,renderer:i,scene:c}){if(p)return hs(r);let d=i.getRenderTarget(),f=c.overrideMaterial,m=c.background,S=i.autoClear,E=new k,ee=i.getClearAlpha();i.getClearColor(E);try{if(i.autoClear=!0,c.overrideMaterial=null,c.background=null,se(n),ce(i,c,n,g,`geometry`),Ss(i)||(ce(i,c,n,_,`material`),Ss(i))||(ce(i,c,n,h,`albedo`),Ss(i)))return p=!0,hs(r);let d=Ho(c,t);if(a.uniforms.tGuideAlbedo.value=h.texture,a.uniforms.tGuideGeometry.value=g.texture,a.uniforms.tGuideMaterial.value=_.texture,a.uniforms.tInput.value=r,a.uniforms.uRecoveryStrength.value=d,de(i,a,b),Ss(i)||(o.uniforms.tFireflyConfidence.value=b.texture,o.uniforms.tGuideMaterial.value=_.texture,o.uniforms.tInput.value=r,de(i,o,x),Ss(i)))return p=!0,hs(r);let f=x.texture,m=v;l.uniforms.tGuideAlbedo.value=h.texture,l.uniforms.tGuideGeometry.value=g.texture,l.uniforms.tGuideMaterial.value=_.texture,l.uniforms.tFireflyConfidence.value=b.texture;for(let t of ys(e.atrousPasses)){if(l.uniforms.tInput.value=f,l.uniforms.uStepWidth.value=t,de(i,l,m),Ss(i))return p=!0,hs(r);f=m.texture,m=m===v?y:v}s.uniforms.tGuideAlbedo.value=h.texture,s.uniforms.tGuideGeometry.value=g.texture,s.uniforms.tGuideMaterial.value=_.texture,s.uniforms.tFireflyConfidence.value=b.texture;let S=x.texture,E=C;for(let t of vs(e.atrousPasses)){if(s.uniforms.tInput.value=S,s.uniforms.uStepWidth.value=t,de(i,s,E),Ss(i))return p=!0,hs(r);S=E.texture,E=E===C?w:C}return u.uniforms.tDiffuse.value=f,u.uniforms.tFireflyConfidence.value=b.texture,u.uniforms.tFiltered.value=S,u.uniforms.tFirefly.value=x.texture,u.uniforms.tGuideAlbedo.value=h.texture,u.uniforms.tGuideGeometry.value=g.texture,u.uniforms.tGuideMaterial.value=_.texture,u.uniforms.tRaw.value=r,de(i,u,T),Ss(i)?(p=!0,hs(r)):{status:`denoised`,texture:T.texture}}finally{c.overrideMaterial=f,c.background=m,i.setRenderTarget(d),i.setClearColor(E,ee),i.autoClear=S}}function se(t){let n=xs(e.depthPhi,t.far);for(let e of m.values())e.albedo.uniforms.uCameraFar.value=t.far,e.geometry.uniforms.uCameraFar.value=t.far,e.material.uniforms.uCameraFar.value=t.far;s.uniforms.uDepthPhi.value=n,l.uniforms.uDepthPhi.value=n,a.uniforms.uDepthPhi.value=n,u.uniforms.uDepthPhi.value=n}function ce(e,t,n,r,i){let a=le(t,i);try{i===`geometry`?e.setClearColor(8421631,1):i===`albedo`?e.setClearColor(16777215,1):e.setClearColor(new k(0,1,0),0),e.setRenderTarget(r),e.clear(!0,!0,!0),e.render(t,n)}finally{Os(a)}}function le(e,t){let n=[];return e.traverse(e=>{Ms(e)&&(n.push({material:e.material,object:e}),e.material=Array.isArray(e.material)?e.material.map(e=>ue(e,t)):ue(e.material,t))}),n}function ue(e,t){let n=m.get(e);return n||(n=Cs(e),m.set(e,n)),t===`geometry`?n.geometry:t===`albedo`?n.albedo:n.material}function de(e,t,a){i.material=t,e.setRenderTarget(a),e.clear(!0,!1,!1),e.render(n,r)}return{dispose:ae,render:oe,reset:ie,setSize:re}}function hs(e){return{status:`error`,texture:e}}function gs({enabled:e,maxSamples:t,sampleCount:n}){return e&&t>0&&n>=t}function _s(e){return e!==0}function vs(e){let t=Math.max(0,Math.min(es,Math.floor(e)));return Array.from({length:t},(e,t)=>2**t)}function ys(e){return vs(e+1)}function bs(e){return(Math.max(1,Math.floor(Math.abs(e)))*16807%(ts-1)+1)/ts}function xs(e,t){return!Number.isFinite(e)||!Number.isFinite(t)||t<=0?.001:Math.max(e/t,1e-6)}function Ss(e){return _s(e.getContext().getError())}function Cs(e){let t=e,n=ws(t),r=new O({depthTest:t.depthTest,depthWrite:!0,fragmentShader:as,name:`Manifest3D path tracing denoise geometry guide material`,side:t.side,transparent:!1,uniforms:le.clone(n),vertexShader:rs,visible:t.visible}),i=new O({depthTest:t.depthTest,depthWrite:!0,fragmentShader:os,name:`Manifest3D path tracing denoise material guide material`,side:t.side,transparent:!1,uniforms:le.clone({...n,uEmissiveProtection:{value:Es(t)},uObjectKey:{value:0},uRoughness:{value:t.roughness??1},uTransparent:{value:t.transparent||t.opacity<.999?1:0}}),vertexShader:rs,visible:t.visible}),a=new O({depthTest:t.depthTest,depthWrite:!0,fragmentShader:ss,name:`Manifest3D path tracing denoise albedo guide material`,side:t.side,transparent:!1,uniforms:le.clone({...n,tMetalnessMap:{value:t.metalnessMap??null},uBaseColor:{value:Ts(t)},uMetalness:{value:t.metalness??0},uUsesMetalnessMap:{value:+!!t.metalnessMap}}),vertexShader:rs,visible:t.visible});return a.onBeforeRender=(e,t,n)=>{a.uniforms.uCameraFar.value=Ds(n)},r.onBeforeRender=(e,t,n)=>{r.uniforms.uCameraFar.value=Ds(n)},i.onBeforeRender=(e,t,n,r,a)=>{i.uniforms.uCameraFar.value=Ds(n),i.uniforms.uObjectKey.value=bs(a.id)},{albedo:a,geometry:r,material:i}}function ws(e){return{tAlphaMap:{value:e.alphaMap??null},tColorMap:{value:e.map??null},uAlphaTest:{value:e.alphaTest??0},uCameraFar:{value:80},uOpacity:{value:e.opacity??1},uUsesAlphaMap:{value:+!!e.alphaMap},uUsesColorMap:{value:+!!e.map}}}function Ts(e){return e.color?.clone()??new k(1,1,1)}function Es(e){let t=e.emissive??new k(0,0,0),n=e.emissiveIntensity??0,r=t.r*.2126+t.g*.7152+t.b*.0722;return Math.min(1,r*Math.max(n,0))}function Ds(e){return e instanceof u?e.far:80}function Os(e){for(let t of e)t.object.material=t.material}function ks(e,t,n){let r=new A(e,t,{depthBuffer:!1,format:F,magFilter:M,minFilter:M,stencilBuffer:!1,type:N});return r.texture.name=`Manifest3D path tracing denoise ${n}`,r.texture.colorSpace=``,r}function As(e,t,n){let r=new A(e,t,{depthBuffer:!1,format:F,magFilter:d,minFilter:d,stencilBuffer:!1,type:N});return r.texture.name=`Manifest3D path tracing denoise ${n}`,r.texture.colorSpace=``,r}function js(e,t,n){let r=new A(e,t,{depthBuffer:!0,format:F,magFilter:d,minFilter:d,stencilBuffer:!1,type:N});return r.texture.name=`Manifest3D path tracing denoise ${n} guide`,r.texture.colorSpace=``,r}function Ms(e){return e.isMesh===!0}function Ns(e,t,n=`idle`){let r=`${e} / ${t} samples`;return n===`denoising`?`${r} (denoising)`:n===`denoised`?`${r} (denoised)`:n===`not-denoised`?`${r} (not denoised)`:n===`not-denoised-error`?`${r} (not denoised - error)`:r}function Ps({maxSamples:e,needsSceneUpload:t,sampleCount:n}){return t||n<e}var Fs=`manifest3d:pathtracer-max-samples`,Is=$.maxSampleOptions[0];function Ls(){return[...$.maxSampleOptions]}function Rs(){if(typeof window>`u`)return Is;try{return Bs(window.localStorage.getItem(Fs))}catch{return Is}}function zs(e){if(!(typeof window>`u`))try{window.localStorage.setItem(Fs,Vs(e))}catch{}}function Bs(e){let t=typeof e==`number`?e:Number.parseInt(String(e),10);return Hs(t)?t:Is}function Vs(e){return String(e)}function Hs(e){return $.maxSampleOptions.includes(e)}function Us(e){let t=e.getSize(new S);return e.setScissorTest(!1),e.setViewport(0,0,t.x,t.y),t}var Ws=Te(),Gs=co();function Ks({assets:e,cameraSnapshot:t,denoiseEnabled:n,jointPreviewPosesByInstance:r,leftPanelOcclusionWidth:i,materialAnimationValuesByInstance:a,rightPanelOcclusionWidth:o,worldMode:s}){let c=(0,X.useRef)(null),l=(0,X.useRef)(null),d=(0,X.useRef)(null),f=(0,X.useRef)(null),p=(0,X.useRef)(null),m=(0,X.useRef)(null),h=(0,X.useRef)(!1),g=(0,X.useRef)(null),_=(0,X.useRef)(null),v=(0,X.useRef)(null),y=(0,X.useMemo)(()=>Ls(),[]),[b,x]=(0,X.useState)(()=>Rs()),S=(0,X.useRef)(b),C=(0,X.useRef)(t??Gs),w=(0,X.useRef)(i),T=(0,X.useRef)(o),E=(0,X.useRef)({height:1,width:1}),ee=(0,X.useRef)(n),[D,O]=(0,X.useState)({height:1,width:1}),k=(0,X.useMemo)(()=>De(D.width,D.height,window.devicePixelRatio),[D.height,D.width]);return(0,X.useEffect)(()=>{let e=l.current;if(!e)return;let t=new ResizeObserver(([e])=>{let{height:t,width:n}=e.contentRect;O({height:Math.max(1,Math.floor(t)),width:Math.max(1,Math.floor(n))})});return t.observe(e),()=>t.disconnect()},[]),(0,X.useEffect)(()=>{let e=c.current;if(!e)return;let t=new ve({alpha:!1,antialias:!0,canvas:e,powerPreference:`high-performance`}),n=new u(38,1,.1,80),r=new te,i=new so(t),a=new jr,o=new Ar,s=new Or(t),l=ms(),d=Po();return t.autoClear=!0,t.outputColorSpace=ge,t.toneMapping=4,t.toneMappingExposure=$.toneMappingExposure,i.bounces=$.bounces,i.filterGlossyFactor=$.filterGlossyFactor,i.minSamples=$.minSamples,i.renderDelay=$.renderDelayMs,i.fadeDuration=0,i.dynamicLowRes=!1,i.lowResScale=1,i.renderScale=1,i.rasterizeScene=!1,i.renderToCanvas=!1,i.tiles.set(...$.tiles),i.textureSize.set($.maxTextureSize,$.maxTextureSize),s.addPass(a),s.addPass(o),p.current={assetBloomPipeline:d,camera:n,composer:s,denoisePipeline:l,pathTracer:i,renderer:t,scene:r,texturePass:a},h.current=!0,Js(v),()=>{m.current?.(),m.current=null,p.current=null,i.dispose(),s.dispose(),l.dispose(),d.dispose(),a.dispose(),o.dispose(),t.dispose()}},[]),(0,X.useEffect)(()=>{E.current=D;let e=p.current;e&&(Ys(e,D,k),Xs({lastPublishedSampleCounterTextRef:g,leftPanelOcclusionWidth:w.current,maxSamples:S.current,rightPanelOcclusionWidth:T.current,runtime:e,sampleCounterRef:f,snapshot:C.current,viewportSize:D}),Js(v))},[k,D]),(0,X.useEffect)(()=>{C.current=t??Gs,w.current=i,T.current=o;let e=p.current;e&&(Xs({lastPublishedSampleCounterTextRef:g,leftPanelOcclusionWidth:i,maxSamples:S.current,rightPanelOcclusionWidth:o,runtime:e,sampleCounterRef:f,snapshot:C.current,viewportSize:E.current}),Js(v))},[t,i,o]),(0,X.useEffect)(()=>{let t=p.current;t&&(m.current?.(),m.current=go({assets:e,jointPreviewPosesByInstance:r,materialAnimationValuesByInstance:a,scene:t.scene,worldMode:s}),h.current=!0,qs({lastPublishedSampleCounterTextRef:g,maxSamples:S.current,sampleCount:0,sampleCounterRef:f}),Js(v))},[e,r,a,s]),(0,X.useEffect)(()=>{ee.current=n,Js(v)},[n]),(0,X.useEffect)(()=>{S.current=b,zs(b);let e=p.current;qs({lastPublishedSampleCounterTextRef:g,maxSamples:b,sampleCount:e?Math.min(b,Math.floor(e.pathTracer.samples)):0,sampleCounterRef:f}),Js(v)},[b]),(0,X.useEffect)(()=>{let e=!1;function t(){e||_.current!==null||(_.current=requestAnimationFrame(n))}function n(){_.current=null;let n=p.current;if(!n||e)return;h.current&&(Zs(n.camera,C.current,E.current,w.current,T.current),Qs(n),h.current=!1,qs({lastPublishedSampleCounterTextRef:g,maxSamples:S.current,sampleCount:0,sampleCounterRef:f}));let r=S.current;n.pathTracer.samples<r&&n.pathTracer.renderSample();let i=Math.min(r,Math.floor(n.pathTracer.samples)),a=n.pathTracer.samples>=r;gs({enabled:$.denoise.enabled&&ee.current,maxSamples:r,sampleCount:n.pathTracer.samples})&&qs({denoiseStatus:`denoising`,lastPublishedSampleCounterTextRef:g,maxSamples:r,sampleCount:i,sampleCounterRef:f});let o=$s(n,ee.current,r);Us(n.renderer),n.texturePass.map=n.assetBloomPipeline.render({camera:n.camera,inputTexture:o.texture,renderer:n.renderer,scene:n.scene}),n.composer.render(),qs({denoiseStatus:o.denoiseStatus??(a?`not-denoised`:`idle`),lastPublishedSampleCounterTextRef:g,maxSamples:r,sampleCount:i,sampleCounterRef:f}),Ps({maxSamples:r,needsSceneUpload:h.current,sampleCount:n.pathTracer.samples})&&t()}return v.current=t,t(),()=>{e=!0,v.current=null,_.current!==null&&(cancelAnimationFrame(_.current),_.current=null)}},[]),(0,Ws.jsxs)(`div`,{className:`pathtracing-stage`,ref:l,children:[(0,Ws.jsx)(`canvas`,{ref:c}),(0,Ws.jsxs)(`details`,{className:`pathtracing-sample-counter`,onBlur:e=>{let t=e.relatedTarget;(!(t instanceof Node)||!e.currentTarget.contains(t))&&(e.currentTarget.open=!1)},ref:d,children:[(0,Ws.jsx)(`summary`,{"aria-haspopup":`menu`,className:`pathtracing-sample-counter__button`,children:(0,Ws.jsx)(`span`,{"aria-live":`polite`,ref:f,role:`status`,children:Ns(0,b)})}),(0,Ws.jsx)(`div`,{className:`pathtracing-sample-counter__menu`,role:`menu`,children:y.map(e=>(0,Ws.jsxs)(`button`,{"aria-checked":e===b,className:e===b?`is-selected`:void 0,onClick:()=>{x(e),d.current&&(d.current.open=!1)},role:`menuitemradio`,type:`button`,children:[e,` samples`]},e))})]})]})}function qs({denoiseStatus:e=`idle`,lastPublishedSampleCounterTextRef:t,maxSamples:n,sampleCount:r,sampleCounterRef:i}){let a=Ns(r,n,e);t.current!==a&&(t.current=a,i.current&&(i.current.textContent=a))}function Js(e){e.current?.()}function Ys(e,t,n){let r=t.width,i=t.height;e.renderer.setPixelRatio(n),e.renderer.setSize(r,i,!1),e.composer.setPixelRatio(n),e.composer.setSize(r,i),e.assetBloomPipeline.setSize(r,i,n),e.denoisePipeline.setSize(r,i,n)}function Xs({lastPublishedSampleCounterTextRef:e,leftPanelOcclusionWidth:t,maxSamples:n,rightPanelOcclusionWidth:r,runtime:i,sampleCounterRef:a,snapshot:o,viewportSize:s}){Zs(i.camera,o,s,t,r),i.pathTracer.updateCamera(),i.pathTracer.reset(),i.denoisePipeline.reset(),qs({lastPublishedSampleCounterTextRef:e,maxSamples:n,sampleCount:0,sampleCounterRef:a})}function Zs(e,t,n,r,i){lo({camera:e,leftPanelOcclusionWidth:r,rightPanelOcclusionWidth:i,snapshot:t,viewportSize:n})}function Qs(e){e.scene.updateMatrixWorld(!0),e.pathTracer.setScene(e.scene,e.camera),e.pathTracer.reset(),e.denoisePipeline.reset()}function $s(e,t,n){if(!gs({enabled:$.denoise.enabled&&t,maxSamples:n,sampleCount:e.pathTracer.samples}))return{texture:e.pathTracer.target.texture};let r=e.denoisePipeline.render({camera:e.camera,inputTexture:e.pathTracer.target.texture,renderer:e.renderer,scene:e.scene});return{denoiseStatus:r.status===`denoised`?`denoised`:`not-denoised-error`,texture:r.texture}}export{Ks as PathTracingCanvas,Ks as default};
